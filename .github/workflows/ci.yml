@@ -1,0 +1,98 @@
+name: ci
+
+on: [push]
+
+jobs:
+  tests:
+    name: Forge Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install Dependencies
+        run: forge install
+
+      - name: Run Tests
+        run: forge test
+        env:
+          FOUNDRY_PROFILE: ci
+
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install deps
+        run: forge install
+
+      - name: Check contract sizes
+        run: forge build --sizes
+
+      - name: Check gas snapshots
+        run: forge snapshot --check
+
+  slither:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install deps
+        run: forge install
+
+      - name: Check contract sizes
+        run: forge build --sizes
+
+      - name: Run Slither
+        uses: crytic/slither-action@main
+        id: slither
+        with:
+          target: '.'
+          slither-args: '--exclude solc-version,pragma,unused-state --exclude-dependencies'
+
+  scripts:
+    strategy:
+      fail-fast: true
+    name: Run Unix Scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Forge build
+        run: |
+          forge --version
+          forge build --sizes
+        id: build
+        continue-on-error: true
+
+      - name: Run scripts
+        run: |
+          ls -lsa
+          ls script/
+          for file in script/*; do
+            forge script $file
+          done
