@@ -5,49 +5,40 @@ import {CleisthenesVoter} from "./CleisthenesVoter.sol";
 import {CleisthenesVoterTokenERC20} from "./CleisthenesVoterTokenERC20.sol";
 
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
+import {CleisthenesFactoryInterface} from "./interfaces/CleisthenesFactoryInterface.sol";
 
+// Note using different cloning libs, will create an immutable args clone friendly erc20 implementation soon to remove
+// these similar dependencies
 import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import "openzeppelin/contracts/proxy/Clones.sol";
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
+import "forge-std/console.sol";
+
+/*//////////////////////////////////////////////////////////////
+                        ERRORS
+//////////////////////////////////////////////////////////////*/
 error NotBridge();
 
-enum ProposalState {
-    Pending,
-    Active,
-    Canceled,
-    Defeated,
-    Succeeded,
-    Queued,
-    Expired,
-    Executed
-}
-
-/// @title Greeter
-contract CleisthenesFactory {
+/// @title CleisthenesFactory
+/// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
+contract CleisthenesFactory is CleisthenesFactoryInterface {
     using ClonesWithImmutableArgs for address;
 
-    address constant bridgeContractAddress = address(0x000);
+    address constant bridgeContractAddress = address(0xdead);
 
     // make immutable?
     CleisthenesVoter public implementation;
-    address public cloneErc20Implementation;
+    CleisthenesVoterTokenERC20 public cloneErc20Implementation;
 
     uint64 public nextAvailableSlot;
     mapping(uint64 => CleisthenesVoter) public voterProxies;
     mapping(address => CleisthenesVoterTokenERC20) public syntheticVoterTokens;
 
-    // Events
-    event CliesthenesVoterCreated(
-        uint64 indexed auxData,
-        address indexed governorAddress,
-        uint256 indexed proposalId,
-        address voterCloneAddress,
-        uint8 vote
-    );
-    event CliesthenesVoterTokenERC20Created(address indexed underlyingToken, address indexed syntheticToken);
-
+    /*//////////////////////////////////////////////////////////////
+                            MODIFIERS
+    //////////////////////////////////////////////////////////////*/
     modifier onlyBridge() {
         if (msg.sender != bridgeContractAddress) {
             revert NotBridge();
@@ -55,29 +46,36 @@ contract CleisthenesFactory {
         _;
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
     constructor() {
+      // Init with dummy values
         implementation = new CleisthenesVoter();
-        
-        CleisthenesVoterTokenERC20 cloneERC20Base = new CleisthenesVoterTokenERC20(18);
-        
+        implementation.initialize(address(this), address(0), address(0), 0, 0);
+
         // Init base erc20 token with dummy values
-        cloneERC20Base.initialize(address(this), "base", "BASE", 18);
+        cloneErc20Implementation = new CleisthenesVoterTokenERC20();
+        cloneErc20Implementation.initialize(address(this), "base", "BASE", 18);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                            STATEFUL
+    //////////////////////////////////////////////////////////////*/
     function createVoterProxy(address _tokenAddress, address _governorAddress, uint256 _proposalId, uint8 _vote)
         external
         returns (CleisthenesVoter clone)
     {
-        // Encode the immutable args to be appended to the end of the clone bytecode
-        bytes memory immutableArgs = abi.encode(address(this), _governorAddress, _proposalId, _vote);
 
         // Check if the underlying token has an erc20 token, if no create it.
         if (address(syntheticVoterTokens[_tokenAddress]) == address(0x0)) {
             syntheticVoterTokens[_tokenAddress] = createSyntheticVoterToken(_tokenAddress);
         }
 
-        // Store the immutable args in the mapping
-        clone = CleisthenesVoter(address(implementation).clone(immutableArgs));
+        // init the clone
+        bytes32 cloneHash = keccak256(abi.encodePacked(address(this), _governorAddress, _tokenAddress, _proposalId, _vote));
+        clone = CleisthenesVoter(Clones.cloneDeterministic(address(implementation), cloneHash));
+        clone.initialize(address(this), _governorAddress, _tokenAddress, _proposalId, _vote);
 
         // cache next available slot in memory
         uint64 _nextAvailableSlot = nextAvailableSlot;
@@ -101,10 +99,10 @@ contract CleisthenesFactory {
         // Transfer the number of input tokens to the voter proxy
         // Store voter clone in memory
         CleisthenesVoter voterClone = voterProxies[_auxData];
-        address _underlyingToken = voterClone.underlyingToken();
+        address _underlyingToken = voterClone.tokenAddress();
 
         // Send the underlying token to the voter proxy
-        ERC20(_underlyingToken).transfer(address(voterClone), _totalInputValue);
+        ERC20(_underlyingToken).transferFrom(address(bridgeContractAddress), address(voterClone), _totalInputValue);
 
         // Send the correct number of voter tokens to the bridge
         CleisthenesVoterTokenERC20 _syntheticToken = syntheticVoterTokens[_underlyingToken];
@@ -120,7 +118,6 @@ contract CleisthenesFactory {
 
     function returnUnderlyingToFactory(uint64 _proxyId) external {
         // If the vote has finished then return the tokens back to the factory so they can be withdrawn
-
     }
 
     // Call the comptroller contract and see if the vote has expired
@@ -149,8 +146,10 @@ contract CleisthenesFactory {
         uint8 decimals = ERC20(_underlyingToken).decimals();
 
         // deploy and initialised the erc20 implementation
-        voterToken = CleisthenesVoterTokenERC20(Clones.cloneDeterministic(cloneErc20Implementation, tokenHash));
+        voterToken = CleisthenesVoterTokenERC20(Clones.cloneDeterministic(address(cloneErc20Implementation), tokenHash));
         voterToken.initialize(address(this), _name, _symbol, decimals);
+
+        console.log(voterToken.name());
 
         // Emit an event as a new voter token has been created
         emit CliesthenesVoterTokenERC20Created(_underlyingToken, address(voterToken));

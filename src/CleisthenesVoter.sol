@@ -2,7 +2,8 @@ pragma solidity 0.8.15;
 
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
 import {CleisthenesFactoryInterface} from "./interfaces/CleisthenesFactoryInterface.sol";
-import {Clone} from "clones-with-immutable-args/Clone.sol";
+import "openzeppelin/contracts/proxy/utils/Initializable.sol";
+
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
 interface CleisthenesVoterInterface {
@@ -19,38 +20,43 @@ interface CleisthenesVoterInterface {
     }
 }
 
+interface IComp {
+    function delegate(address) external;
+}
+
 error OnlyFactory();
 error VoteStillActive();
 error FailedToReturnTokensToFactory();
 
-contract CleisthenesVoter is Clone, CleisthenesVoterInterface {
-    address immutable factoryAddress;
+contract CleisthenesVoter is CleisthenesVoterInterface, Initializable {
+    address factoryAddress;
 
-    // TODO: pack proposal address nad vote and voteId into one slot
-    address immutable proposalAddress;
-    address immutable tokenAddress;
-    uint8 immutable vote;
-    uint256 immutable proposalId;
+    address public govAddress;
+    address public tokenAddress;
+    uint8 public vote;
+    uint256 public proposalId;
 
     modifier onlyFactory() {
-        if (msg.sender != factoryAddress) {
-            revert OnlyFactory();
-        }
+        if (msg.sender != factoryAddress) revert OnlyFactory();
         _;
     }
 
-    constructor() {
-        // TODO: an nice comment showing the layout of the args
-        factoryAddress = _getArgAddress(0);
-        proposalAddress = _getArgAddress(20);
-        tokenAddress = _getArgAddress(40);
-        proposalId = _getArgUint256(60);
-        vote = _getArgUint8(92); // TODO: this is incorrect
+    function initialize(address _factoryAddress, address _govAddress,  address _tokenAddress, uint256 _proposalId, uint8 _vote) external initializer {
+        factoryAddress = _factoryAddress;
+        govAddress = _govAddress;
+        tokenAddress = _tokenAddress;
+        proposalId = _proposalId;
+        vote = _vote; 
     }
 
     // TODO: Will this be callable by anyone - should there be constraints in the block time allowed;
-    function executeVote() external onlyFactory {
-        GovernorBravoDelegateInterface(proposalAddress).castVote(proposalId, vote);
+    function executeVote() external onlyFactory {        
+        GovernorBravoDelegateInterface(govAddress).castVote(proposalId, vote);
+    }
+
+    // Delegate function can be called by anyone
+    function delegate() external {
+        IComp(tokenAddress).delegate(address(this));
     }
 
     /**
@@ -58,7 +64,7 @@ contract CleisthenesVoter is Clone, CleisthenesVoterInterface {
      * @notice Call the factory to check if the vote has expired, if so then use to allow withdrwawl
      */
     function hasVoteExpired() internal {
-        bool voteExpired = CleisthenesFactoryInterface(factoryAddress).hasVoteExpired(tokenAddress, proposalId);
+        bool voteExpired = CleisthenesFactoryInterface(factoryAddress).hasVoteExpired(govAddress, proposalId);
         if (!voteExpired) {
             revert VoteStillActive();
         }
@@ -69,7 +75,7 @@ contract CleisthenesVoter is Clone, CleisthenesVoterInterface {
         hasVoteExpired();
 
         // Return the balance of the factory back to the rollup
-        uint256 balance = ERC20(tokenAddress).balanceOf(address(this)); 
+        uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
         bool success = ERC20(tokenAddress).transfer(factoryAddress, balance);
         if (!success) {
             revert FailedToReturnTokensToFactory();
