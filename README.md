@@ -2,9 +2,13 @@
 
 # Athens • [![ci](https://github.com/abigger87/Athens/actions/workflows/ci.yml/badge.svg)](https://github.com/abigger87/Athens/actions/workflows/ci.yml) ![license](https://img.shields.io/github/license/abigger87/Athens?label=license) ![solidity](https://img.shields.io/badge/solidity-^0.8.15-lightgrey)
 
-A **Clean**, **Robust** Template for Foundry Projects.
+## What is Athens
 
-## Getting Started
+When paired with the Athens Aztec Bridge, it will enable any users of existing protocols with on chain governance (Currently limited to forks of Governor Bravo) to vote on proposals anonymously through the power of Aztec's DefiBatching technology.
+
+This project was created by sleep deprivation as part of the EthBerlin 2022 Hackathon and is not in anyway shape or form ready for production use.
+
+Generated from [femplate](https://github.com/abigger87/femplate)
 
 ## Blueprint
 
