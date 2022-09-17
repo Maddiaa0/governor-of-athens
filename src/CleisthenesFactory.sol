@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import { ERC20 } from "solmate/tokens/ERC20.sol";
 import { CleisthenesVoter } from "./CleisthenesVoter.sol";
 
 
@@ -18,6 +17,7 @@ contract CliesthenesFactory {
   
   uint64 public nextAvailableSlot; 
   mapping(uint64 => address) public voterProxies;
+  mapping(address => address) public syntheticVoterTokens;
   event CliesthenesVoterCreated(uint64 indexed auxData, address indexed govenorAddress, address indexed proposalId, address shadowCourtVoterAddress, uint8 vote);
 
 
@@ -31,6 +31,7 @@ contract CliesthenesFactory {
 
   constructor() {
     implementation = new CleisthenesVoter();
+    cloneErc20Implementation = new ERC20();
   }
 
 
@@ -47,6 +48,11 @@ contract CliesthenesFactory {
       _proposalId,
       _vote
     );
+
+    // Check if the underlying token has an erc20 token, if no create it.
+    if (syntheticVoterTokens[_tokenAddress] == 0) {
+      syntheticVoterTokens[_tokenAddress] = createSyntheticVoterToken(_tokenAddress);
+    } 
 
     // Store the immutable args in the mapping
     clone = CliesthenesVoter(address(implementation)).clone(immutableArgs);
@@ -71,5 +77,13 @@ contract CliesthenesFactory {
     // Store voter clone in memory
     voterClone = CliesthenesVoter(voterProxies[_auxData]);
   }
+
+
+  // Deploy an erc20 factory to represent the tokens in the votes i.e. zkvComp, zkvUni
+  function createSyntheticVoterToken(address _underlyingToken) {
+    // Use clone deteministic to do this?
+  }
+
+  
 
 }
