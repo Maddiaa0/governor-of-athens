@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 pragma solidity 0.8.15;
 
+/// Taken from: https://github.com/compound-finance/compound-protocol/blob/master/contracts/Governance/GovernorBravoInterfaces.sol
+
 interface GovernorBravoDelegateInterface {
     enum ProposalState {
         Pending,
@@ -31,6 +33,8 @@ interface GovernorBravoDelegateInterface {
     )
         external
         returns (uint256);
+
+    
 }
 
 contract GovernorBravoEvents {

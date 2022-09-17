@@ -3,20 +3,16 @@ pragma solidity ^0.8.15;
 
 import {AthensVoter} from "./AthensVoter.sol";
 import {AthensVoterTokenERC20} from "./AthensVoterTokenERC20.sol";
-
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
 import {AthensFactoryInterface} from "./interfaces/AthensFactoryInterface.sol";
-
-import "openzeppelin/contracts/proxy/Clones.sol";
-
+import "openzeppelin/contracts/proxy/Clones.sol"
 import {ERC20} from "solmate/tokens/ERC20.sol";
-
-import "forge-std/console.sol";
 
 /*//////////////////////////////////////////////////////////////
                         ERRORS
 //////////////////////////////////////////////////////////////*/
 error NotBridge();
+error InvalidAuxData();
 
 /// @title AthensFactory
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
@@ -94,6 +90,10 @@ contract AthensFactory is AthensFactoryInterface {
         // Transfer the number of input tokens to the voter proxy
         // Store voter clone in memory
         AthensVoter voterClone = voterProxies[_auxData];
+
+        // Revert if no proxy is deployed for the given aux data
+        if (address(voterClone) == address(0x0)) revert InvalidAuxData();
+
         address _underlyingToken = voterClone.tokenAddress();
 
         // Send the underlying token to the voter proxy
@@ -104,6 +104,7 @@ contract AthensFactory is AthensFactoryInterface {
         _syntheticToken.mint(msg.sender, _totalInputValue);
     }
 
+    // TODO
     // function redeemVotingTokens(uint256 _totalInputValue) onlyBridge {
     //   // Return the number of voter tokens back to the bridge
 
@@ -143,8 +144,6 @@ contract AthensFactory is AthensFactoryInterface {
         // deploy and initialised the erc20 implementation
         voterToken = AthensVoterTokenERC20(Clones.cloneDeterministic(address(cloneErc20Implementation), tokenHash));
         voterToken.initialize(address(this), _name, _symbol, decimals);
-
-        console.log(voterToken.name());
 
         // Emit an event as a new voter token has been created
         emit CliesthenesVoterTokenERC20Created(_underlyingToken, address(voterToken));

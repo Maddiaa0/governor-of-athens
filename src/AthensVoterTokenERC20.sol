@@ -7,24 +7,43 @@ import "openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 error AlreadyInitialised();
 
-contract AthensVoterTokenERC20 is ERC20, Initializable {
 
+/// @title AthensVoterTokenERC20
+/// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
+contract AthensVoterTokenERC20 is ERC20, Initializable {
+    
+    /// @notice ERC20 Metadata
     uint8 _decimals;
     string private _name;
     string private _symbol;
 
+    /// @notice The token Owner (AthensFactory)
     address public owner;
+
+
+    /*//////////////////////////////////////////////////////////////
+                            Modifiers
+    //////////////////////////////////////////////////////////////*/
 
     modifier onlyOwner() {
         require(msg.sender == owner, "msg.sender not owner");
         _;
     }
 
+
+    /*//////////////////////////////////////////////////////////////
+                            Constructor
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Uses Dummy data as implementation will be cloned
     constructor() ERC20("ZKV", "ZKV"){}
 
-     /**
-     * @dev Sets the values for {name}, {symbol} and {decimals}.
-     */
+    /*//////////////////////////////////////////////////////////////
+                            Initializer
+    //////////////////////////////////////////////////////////////*/
+
+    /// Initialize
+    /// @notice Sets the values for {name}, {symbol} and {decimals}.
     function initialize(address factory, string memory name_, string memory symbol_, uint8 decimals_)
         external
         initializer
@@ -35,16 +54,21 @@ contract AthensVoterTokenERC20 is ERC20, Initializable {
         _decimals = decimals_;
     }
 
-
-
-    // Must have same number of decimals as the underlying
+    /// Mint
+    /// @notice Mint ZKVoter tokens to the bridge user
     function mint(address account, uint256 amount) external onlyOwner {
         _mint(account, amount);
     }
 
+    /// Burn
+    /// @notice Destroy ZKVoter tokens
     function burn(address account, uint256 amount) external onlyOwner {
         _burn(account, amount);
     }
+
+    /*//////////////////////////////////////////////////////////////
+                        Getter Overrides
+    //////////////////////////////////////////////////////////////*/
 
     function decimals() public view virtual override returns (uint8) {
         return _decimals;
@@ -58,12 +82,10 @@ contract AthensVoterTokenERC20 is ERC20, Initializable {
         return _symbol;
     }
 
-    /**
-     * @notice Transfer ownership. Implemented to help with initializable
-     */
+    /// Transfer Ownership
+    /// @notice Transfer ownership. Implemented to help with initializable
     function transferOwnership(address _owner) external onlyOwner {
         require(_owner != address(0), "Owner: setting to 0 address");
         owner = _owner;
     }
-
 }
