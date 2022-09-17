@@ -21,6 +21,7 @@ read -ra args
 # Run the script
 echo Running Script: $script...
 
+
 # We specify the anvil url as http://localhost:8545
 # We need to specify the sender for our local anvil node
 forge script $script \

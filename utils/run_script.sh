@@ -19,5 +19,6 @@ forge script $script \
     --rpc-url $RPC_URL \
     --broadcast \
     -vvvv \
+    --legacy \
     --private-key $DEPLOYER_KEY \
     $args

@@ -7,9 +7,6 @@ import {CleisthenesVoterTokenERC20} from "./CleisthenesVoterTokenERC20.sol";
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
 import {CleisthenesFactoryInterface} from "./interfaces/CleisthenesFactoryInterface.sol";
 
-// Note using different cloning libs, will create an immutable args clone friendly erc20 implementation soon to remove
-// these similar dependencies
-import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 import "openzeppelin/contracts/proxy/Clones.sol";
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
@@ -24,8 +21,6 @@ error NotBridge();
 /// @title CleisthenesFactory
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
 contract CleisthenesFactory is CleisthenesFactoryInterface {
-    using ClonesWithImmutableArgs for address;
-
     address constant bridgeContractAddress = address(0xdead);
 
     // make immutable?
