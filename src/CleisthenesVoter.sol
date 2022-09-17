@@ -8,7 +8,7 @@ import { ERC20 } from "solmate/tokens/ERC20.sol";
 error OnlyFactory();
 error VoteStillActive();
 error FailedToReturnTokensToFactory();
-contract CliesthenesVoter is CliesthenesVoterInterface {
+contract CliesthenesVoter is Clone, CliesthenesVoterInterface {
 
     address immutable factoryAddress;
 
@@ -21,6 +21,16 @@ contract CliesthenesVoter is CliesthenesVoterInterface {
     modifier onlyFactory() {
         if (msg.sender != factoryAddress) revert OnlyFactory();
         _;
+    }
+
+
+    constructor() {
+        // TODO: an nice comment showing the layout of the args
+        factoryAddress = _getArgAddress(0);
+        proposalAddress = _getArgAddress(20);
+        tokenAddress = _getArgAddress(40);
+        proposalId = _getArgUint256(60);
+        vote = _getArgUint8(92); // TODO: this is incorrect
     }
 
 

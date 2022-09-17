@@ -2,7 +2,7 @@
 pragma solidity ^0.8.15;
 
 import { CleisthenesVoter } from "./CleisthenesVoter.sol";
-
+import {CleisthenesVoterTokenERC20} from "./CleisthenesVoterTokenERC20";
 
 
 error NotBridge();
@@ -12,14 +12,18 @@ contract CliesthenesFactory {
 
   address constant bridgeContractAddress = 0x000;
 
+  // make immutable?
   CleisthenesVoter public implementation;
+  CleisthenesVoterTokenERC20 public cloneErc20Implementation;
 
   
   uint64 public nextAvailableSlot; 
   mapping(uint64 => address) public voterProxies;
   mapping(address => address) public syntheticVoterTokens;
-  event CliesthenesVoterCreated(uint64 indexed auxData, address indexed govenorAddress, address indexed proposalId, address shadowCourtVoterAddress, uint8 vote);
 
+  // Events
+  event CliesthenesVoterCreated(uint64 indexed auxData, address indexed govenorAddress, address indexed proposalId, address shadowCourtVoterAddress, uint8 vote);
+  event CliesthenesVoterTokenERC20Created(address indexed underlyingToken, address indexed syntheticToken);
 
   modifier onlyBridge() {
     if (!(msg.sender == bridgeContractAddress)){
@@ -31,7 +35,7 @@ contract CliesthenesFactory {
 
   constructor() {
     implementation = new CleisthenesVoter();
-    cloneErc20Implementation = new ERC20();
+    cloneErc20Implementation = new CleisthenesVoterTokenERC20();
   }
 
 
@@ -70,7 +74,11 @@ contract CliesthenesFactory {
 
 
   // Called by the bridge contract to get the proxy address of a vote - can only be called by the bridge
-  function allocateVote(uint64 _auxData) external onlyBridge returns (CliesthenesVoter voterClone) {
+  /**
+   * @param _auxData _aux bridge data, this tells us which voter proxy we are targeting
+   * @param _totalInputValue The total number of input tokens being vote with
+   */  
+  function allocateVote(uint64 _auxData, uint256 _totalInputValue) external onlyBridge returns (CliesthenesVoter voterClone) {
     
     // TODO: receive the voting token and return an erc20 representing it to the shadow voter
 
@@ -79,9 +87,24 @@ contract CliesthenesFactory {
   }
 
 
+  function redeemVotingTokens() {}
+
+
   // Deploy an erc20 factory to represent the tokens in the votes i.e. zkvComp, zkvUni
-  function createSyntheticVoterToken(address _underlyingToken) {
-    // Use clone deteministic to do this?
+  function createSyntheticVoterToken(address _underlyingToken) returns (CleisthenesVoterTokenERC20 voterToken) {
+    // args
+    bytes memory immutableArgs = abi.encode(
+      _underlyingToken
+    ); 
+
+    // Deploy clone of the base erc20 token
+    voterToken = CleisthenesVoterTokenERC20(address(cloneErc20Implementation)).clone(immutableArgs);
+
+    // update the mapping 
+    syntheticVoterTokens[_underlying] = voterToken;
+
+    // Emit an event as a new voter token has been created
+    emit CliesthenesVoterTokenERC20Created(_underlying, voterToken);
   }
 
   
