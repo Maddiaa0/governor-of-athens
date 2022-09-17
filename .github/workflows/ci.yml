@@ -64,35 +64,5 @@ jobs:
         uses: crytic/slither-action@main
         id: slither
         with:
-          target: '.'
-          slither-args: '--exclude solc-version,pragma,unused-state --exclude-dependencies'
-
-  scripts:
-    strategy:
-      fail-fast: true
-    name: Run Unix Scripts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
-
-      - name: Run Forge build
-        run: |
-          forge --version
-          forge build --sizes
-        id: build
-        continue-on-error: true
-
-      - name: Run scripts
-        run: |
-          ls -lsa
-          ls script/
-          for file in script/*; do
-            forge script $file
-          done
+          target: "."
+          slither-args: "--exclude solc-version,pragma,unused-state --exclude-dependencies"
