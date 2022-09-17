@@ -111,7 +111,7 @@ contract AthensVoter is AthensVoterInterface, Initializable {
     /// Return Tokens to Rollup
     /// @notice Return users tokens back to the rollup for user collection
     /// @dev The vote must have completed before this function can be called
-    function returnTokenToRollup() internal {
+    function returnTokenToFactory() external onlyFactory {
         // Only able to be called if the vote has expired
         hasVoteExpired();
 

@@ -149,5 +149,37 @@ contract AthensFactoryTest is Test {
         assertEq(balance, numTokens);
     }
 
-    function canRedeemRollupTokens() external {}
+    function testCanRedeemRollupTokens() external {
+        // Create voter contract
+        uint256 proposalId = 101;
+        address underlyingToken = compToken;
+        address govContract = govBravo;
+
+        AthensVoter proxy = factory.createVoterProxy(underlyingToken, govContract, proposalId, 1);
+
+        // Allocate vote
+        address rollup = address(0xdead);
+        uint256 numTokens = 1e19;
+        // Give the bridge comp tokens
+        deal(address(compToken), rollup, numTokens);
+        vm.prank(rollup);
+        IComp(compToken).approve(address(factory), numTokens);
+
+        vm.prank(rollup);
+        factory.allocateVote(0, numTokens);
+
+        // check i have a balance of synthetic tokens
+        address zkVoteToken = address(factory.zkVoterTokens(compToken));
+        uint256 balance = IComp(zkVoteToken).balanceOf(rollup);
+
+        // Attempt to redeem tokens as the bridge
+        vm.prank(rollup);
+        factory.redeemVotingTokens(0, numTokens);
+
+        // assert synthetic tokens destroyed
+        assertEq(IComp(zkVoteToken).balanceOf(rollup), 0);
+
+        // assert rollup receives tokens back
+        assertEq(IComp(compToken).balanceOf(rollup), numTokens);
+    }
 }

@@ -10,14 +10,14 @@ interface AthensFactoryInterface {
                             EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event CliesthenesVoterCreated(
+    event AthensVoterCreated(
         uint64 indexed auxData,
         address indexed governorAddress,
         uint256 indexed proposalId,
         address voterCloneAddress,
         uint8 vote
     );
-    event CliesthenesVoterTokenERC20Created(address indexed underlyingToken, address indexed syntheticToken);
+    event AthensVoterTokenERC20Created(address indexed underlyingToken, address indexed syntheticToken);
 
     /*//////////////////////////////////////////////////////////////
                             Functions
@@ -30,4 +30,6 @@ interface AthensFactoryInterface {
     function allocateVote(uint64 _auxData, uint256 _totalInputValue) external;
     function voterProxies(uint64) external returns (AthensVoter);
     function zkVoterTokens(address) external returns (AthensVoterTokenERC20);
+    function redeemVotingTokens(uint64 _auxData, uint256 _totalInputValue) external;
+
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.15;
+pragma solidity 0.8.15;
 
 import {AthensVoter} from "./AthensVoter.sol";
 import {AthensVoterTokenERC20} from "./AthensVoterTokenERC20.sol";
@@ -90,7 +90,7 @@ contract AthensFactory is AthensFactoryInterface {
         voterProxies[_nextAvailableSlot] = clone;
 
         // Emit that a voter event is created for the front end
-        emit CliesthenesVoterCreated(_nextAvailableSlot, _governorAddress, _proposalId, address(clone), _vote);
+        emit AthensVoterCreated(_nextAvailableSlot, _governorAddress, _proposalId, address(clone), _vote);
 
         // Increment the next available slot
         nextAvailableSlot = ++_nextAvailableSlot;
@@ -123,17 +123,26 @@ contract AthensFactory is AthensFactoryInterface {
         _syntheticToken.mint(msg.sender, _totalInputValue);
     }
 
-    // TODO
-    function redeemVotingTokens(uint256 _auxData, uint256 _totalInputValue) onlyBridge {
-      // Return the number of voter tokens back to the bridge
-      
+    /// Redeem Voting Tokens
+    /// @notice Redeems the zkVoting tokens for the underlying token
+    /// @dev onlyBridge - Trusts that the bridge calls with the correct _totalInputValue
+    /// @param _auxData The proxy we are targeting
+    /// @param _totalInputValue The number of tokens being redeemed
+    function redeemVotingTokens(uint64 _auxData, uint256 _totalInputValue) external onlyBridge {
+        // Return the number of voter tokens back to the bridge
+        // Get the voter proxy
+        AthensVoter voterClone = voterProxies[_auxData];
 
-      // Check that the factory has enough tokens to return to the bridge
-    
-    }
+        // Return remaining tokens to the factory- this will fail if the vote has not completed yet
+        voterClone.returnTokenToFactory();
 
-    function returnUnderlyingToFactory(uint64 _proxyId) external {
-        // If the vote has finished then return the tokens back to the factory so they can be withdrawn
+        // Transfer the tokens to the bridge
+        address _underlyingToken = voterClone.tokenAddress();
+        ERC20(_underlyingToken).transfer(address(bridgeContractAddress), _totalInputValue);
+
+        // Burn the matching number of voter tokens
+        AthensVoterTokenERC20 _zkVoterToken = zkVoterTokens[_underlyingToken];
+        _zkVoterToken.burn(msg.sender, _totalInputValue);
     }
 
     /// Has Vote Expired
@@ -145,12 +154,13 @@ contract AthensFactory is AthensFactoryInterface {
     function hasVoteExpired(address _governorAddress, uint256 _proposalId) external returns (bool validState) {
         GovernorBravoDelegateInterface.ProposalState returnedProposalState =
             GovernorBravoDelegateInterface(_governorAddress).state(_proposalId);
-        // TODO: more gas efficient way to do this?
+        
+        // TODO: more gas efficient way to do this - check inverse?
         validState = (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Succeeded)
             || (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Expired)
             || (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Canceled)
             || (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Defeated)
-            || (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Defeated);
+            || (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Executed);
     }
 
     /// Create Synthetic Voter Token
@@ -172,6 +182,6 @@ contract AthensFactory is AthensFactoryInterface {
         voterToken.initialize(address(this), _name, _symbol, decimals);
 
         // Emit an event as a new voter token has been created
-        emit CliesthenesVoterTokenERC20Created(_underlyingToken, address(voterToken));
+        emit AthensVoterTokenERC20Created(_underlyingToken, address(voterToken));
     }
 }
