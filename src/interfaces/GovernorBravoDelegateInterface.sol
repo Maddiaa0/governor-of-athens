@@ -1,8 +1,7 @@
+pragma solidity 0.8.15;
 
-
-interface GovernerBravoDelegateInterface {
-
-   enum ProposalState {
+interface GovernorBravoDelegateInterface {
+    enum ProposalState {
         Pending,
         Active,
         Canceled,
@@ -13,12 +12,12 @@ interface GovernerBravoDelegateInterface {
         Executed
     }
 
-    function state(uint proposalId) external returns (ProposalState);
+    function state(uint256 proposalId) external returns (ProposalState);
 
     /**
-    * @notice Cast a vote for a proposal
-    * @param proposalId The id of the proposal to vote on
-    * @param support The support value for the vote. 0=against, 1=for, 2=abstain
-    */
+     * @notice Cast a vote for a proposal
+     * @param proposalId The id of the proposal to vote on
+     * @param support The support value for the vote. 0=against, 1=for, 2=abstain
+     */
     function castVote(uint256 proposalId, uint8 support) external;
 }
