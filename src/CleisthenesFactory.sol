@@ -7,6 +7,7 @@ import {CleisthenesVoterTokenERC20} from "./CleisthenesVoterTokenERC20.sol";
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
 
 import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
+import "openzeppelin/contracts/proxy/Clones.sol";
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
@@ -31,7 +32,7 @@ contract CleisthenesFactory {
 
     // make immutable?
     CleisthenesVoter public implementation;
-    CleisthenesVoterTokenERC20 public cloneErc20Implementation;
+    address public cloneErc20Implementation;
 
     uint64 public nextAvailableSlot;
     mapping(uint64 => CleisthenesVoter) public voterProxies;
@@ -56,7 +57,11 @@ contract CleisthenesFactory {
 
     constructor() {
         implementation = new CleisthenesVoter();
-        cloneErc20Implementation = new CleisthenesVoterTokenERC20(address(this));
+        
+        CleisthenesVoterTokenERC20 cloneERC20Base = new CleisthenesVoterTokenERC20(18);
+        
+        // Init base erc20 token with dummy values
+        cloneERC20Base.initialize(address(this), "base", "BASE", 18);
     }
 
     function createVoterProxy(address _tokenAddress, address _governorAddress, uint256 _proposalId, uint8 _vote)
@@ -115,6 +120,7 @@ contract CleisthenesFactory {
 
     function returnUnderlyingToFactory(uint64 _proxyId) external {
         // If the vote has finished then return the tokens back to the factory so they can be withdrawn
+
     }
 
     // Call the comptroller contract and see if the vote has expired
@@ -135,10 +141,16 @@ contract CleisthenesFactory {
         returns (CleisthenesVoterTokenERC20 voterToken)
     {
         // args
-        bytes memory immutableArgs = abi.encode(_underlyingToken);
+        bytes32 tokenHash = keccak256(abi.encode(_underlyingToken));
 
-        // Deploy clone of the base erc20 token
-        voterToken = CleisthenesVoterTokenERC20(address(cloneErc20Implementation).clone(immutableArgs));
+        // Get the name, symbol and decimals of the underlying
+        string memory _name = string(abi.encodePacked("zkv", ERC20(_underlyingToken).name()));
+        string memory _symbol = string(abi.encodePacked("zkv", ERC20(_underlyingToken).symbol()));
+        uint8 decimals = ERC20(_underlyingToken).decimals();
+
+        // deploy and initialised the erc20 implementation
+        voterToken = CleisthenesVoterTokenERC20(Clones.cloneDeterministic(cloneErc20Implementation, tokenHash));
+        voterToken.initialize(address(this), _name, _symbol, decimals);
 
         // Emit an event as a new voter token has been created
         emit CliesthenesVoterTokenERC20Created(_underlyingToken, address(voterToken));

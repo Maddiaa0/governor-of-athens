@@ -1,30 +1,16 @@
 pragma solidity 0.8.15;
 
 import {Clone} from "clones-with-immutable-args/Clone.sol";
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {Owned} from "solmate/auth/Owned.sol";
+import {ERC20_Cloneable} from "./utils/ERC20_Cloneable.sol";
 
 
 error AlreadyInitialised();
-contract CleisthenesVoterTokenERC20 is Clone, ERC20, Owned {
+contract CleisthenesVoterTokenERC20 is ERC20_Cloneable {
     address underlying;
-    bool initialised;
-
-    modifier notInitialised() {
-        if (initialised) revert AlreadyInitialised();
-        _;
-    }
 
     // Must have same number of decimals as the underlying
-    constructor(address _underlying) ERC20() Owned(msg.sender) {
-        underlying = _underlying;
-    }
+    constructor(uint8 _decimals) ERC20_Cloneable("PRIVATE_TOKEN", "PRIVATE", _decimals) {}
         
-    
-    function initialise() notInitialised external {
-        setOwner(msg.sender);
-
-    } 
 
     function mint(address account, uint256 amount) external onlyOwner {
         _mint(account, amount);

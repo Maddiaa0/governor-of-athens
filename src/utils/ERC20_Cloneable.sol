@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.7;
+pragma solidity 0.8.15;
 
 import "openzeppelin/contracts/utils/Context.sol";
 import "openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -54,12 +54,12 @@ contract ERC20_Cloneable is ERC20, Initializable {
     }
 
     function initialize(
-        address _pool,
+        address factory,
         string memory name_,
         string memory symbol_,
         uint8 decimals_
     ) external initializer {
-        owner = _pool;
+        owner = factory;
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;

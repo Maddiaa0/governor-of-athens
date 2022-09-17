@@ -1,0 +1,5 @@
+clones-with-immutable-args/=lib/clones-with-immutable-args/src/
+ds-test/=lib/clones-with-immutable-args/lib/ds-test/src/
+forge-std/=lib/forge-std/src/
+solmate/=lib/solmate/src/
+openzeppelin/=lib/openzeppelin-contracts/
