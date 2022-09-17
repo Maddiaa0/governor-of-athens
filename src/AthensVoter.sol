@@ -1,12 +1,12 @@
 pragma solidity 0.8.15;
 
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
-import {CleisthenesFactoryInterface} from "./interfaces/CleisthenesFactoryInterface.sol";
+import {AthensFactoryInterface} from "./interfaces/AthensFactoryInterface.sol";
 import "openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
-interface CleisthenesVoterInterface {
+interface AthensVoterInterface {
     /// @notice Possible states that a proposal may be in
     enum ProposalState {
         Pending,
@@ -18,6 +18,11 @@ interface CleisthenesVoterInterface {
         Expired,
         Executed
     }
+
+    function initialize(address _factoryAddress, address _govAddress,  address _tokenAddress, uint256 _proposalId, uint8 _vote) external;
+    function executeVote() external;        
+    function delegate() external;
+    function underlyingToken() external returns (address);
 }
 
 interface IComp {
@@ -28,7 +33,7 @@ error OnlyFactory();
 error VoteStillActive();
 error FailedToReturnTokensToFactory();
 
-contract CleisthenesVoter is CleisthenesVoterInterface, Initializable {
+contract AthensVoter is AthensVoterInterface, Initializable {
     address factoryAddress;
 
     address public govAddress;
@@ -64,7 +69,7 @@ contract CleisthenesVoter is CleisthenesVoterInterface, Initializable {
      * @notice Call the factory to check if the vote has expired, if so then use to allow withdrwawl
      */
     function hasVoteExpired() internal {
-        bool voteExpired = CleisthenesFactoryInterface(factoryAddress).hasVoteExpired(govAddress, proposalId);
+        bool voteExpired = AthensFactoryInterface(factoryAddress).hasVoteExpired(govAddress, proposalId);
         if (!voteExpired) {
             revert VoteStillActive();
         }

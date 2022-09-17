@@ -5,7 +5,7 @@ pragma solidity ^0.8.15;
 
 import {Script} from "forge-std/Script.sol";
 
-import {CleisthenesFactory} from "../src/CleisthenesFactory.sol";
+import {AthensFactory} from "../src/AthensFactory.sol";
 
 /// @notice A very simple deployment script
 contract Create is Script {
@@ -21,7 +21,7 @@ contract Create is Script {
     /// @return clone The deployed contract
     function run() external returns (address clone) {
         
-        CleisthenesFactory factory = CleisthenesFactory(factoryAddress);
+        AthensFactory factory = AthensFactory(factoryAddress);
         vm.startBroadcast();
         
         clone = address(factory.createVoterProxy(compToken, compGov, proposalId, vote));

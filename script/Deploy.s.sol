@@ -3,15 +3,15 @@ pragma solidity ^0.8.15;
 
 import {Script} from "forge-std/Script.sol";
 
-import {CleisthenesFactory} from "../src/CleisthenesFactory.sol";
+import {AthensFactory} from "../src/AthensFactory.sol";
 
 /// @notice A very simple deployment script
 contract Deploy is Script {
     /// @notice The main script entrypoint
     /// @return factory The deployed contract
-    function run() external returns (CleisthenesFactory factory) {
+    function run() external returns (AthensFactory factory) {
         vm.startBroadcast();
-        factory = new CleisthenesFactory();
+        factory = new AthensFactory();
         vm.stopBroadcast();
     }
 }

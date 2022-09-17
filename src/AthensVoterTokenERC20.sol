@@ -7,7 +7,7 @@ import "openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 error AlreadyInitialised();
 
-contract CleisthenesVoterTokenERC20 is ERC20, Initializable {
+contract AthensVoterTokenERC20 is ERC20, Initializable {
 
     uint8 _decimals;
     string private _name;

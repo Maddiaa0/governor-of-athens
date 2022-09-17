@@ -6,8 +6,8 @@ import "forge-std/Vm.sol";
 
 import {GovernorBravoDelegateInterface} from "../src/interfaces/GovernorBravoDelegateInterface.sol";
 
-import {CleisthenesFactory} from "../src/CleisthenesFactory.sol";
-import {CleisthenesVoter} from "../src/CleisthenesVoter.sol";
+import {AthensFactory} from "../src/AthensFactory.sol";
+import {AthensVoter} from "../src/AthensVoter.sol";
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
@@ -20,11 +20,11 @@ interface IComp {
     function approve(address, uint256) external;
 }
 
-contract CleisthenesFactoryTest is Test {
+contract AthensFactoryTest is Test {
     using stdStorage for StdStorage;
 
     // Test Contract
-    CleisthenesFactory factory;
+    AthensFactory factory;
 
     // Mainnet compound controller addresses
     address user = address(0xBeef);
@@ -35,14 +35,14 @@ contract CleisthenesFactoryTest is Test {
     uint256 forkId;
 
     function setUp() external {
-        factory = new CleisthenesFactory();
+        factory = new AthensFactory();
     }
 
     // function setUpProposal() internal returns (uint96){
     //     forkId = vm.createFork(vm.envString("RPC_URL"));
     //     vm.selectFork(forkId);
 
-    //     factory = new CleisthenesFactory();
+    //     factory = new AthensFactory();
     //     vm.makePersistent(address(factory));
     //     // Grant the sender x compound tokens
     //     // Update the total supply slot of the token
@@ -95,7 +95,7 @@ contract CleisthenesFactoryTest is Test {
     //     address govContract = govBravo;
         
 
-    //     CleisthenesVoter proxy = factory.createVoterProxy(underlyingToken, govContract, proposalId, 1);
+    //     AthensVoter proxy = factory.createVoterProxy(underlyingToken, govContract, proposalId, 1);
     //     console.log(address(proxy));
 
 
@@ -113,7 +113,7 @@ contract CleisthenesFactoryTest is Test {
         address underlyingToken = compToken;
         address govContract = govBravo;
         
-        CleisthenesVoter proxy = factory.createVoterProxy(underlyingToken, govContract, proposalId, 1);
+        AthensVoter proxy = factory.createVoterProxy(underlyingToken, govContract, proposalId, 1);
 
         // assert clone parameters
         console.log(proxy.tokenAddress());
@@ -129,7 +129,7 @@ contract CleisthenesFactoryTest is Test {
         address underlyingToken = compToken;
         address govContract = govBravo;
         
-        CleisthenesVoter proxy = factory.createVoterProxy(underlyingToken, govContract, proposalId, 1);
+        AthensVoter proxy = factory.createVoterProxy(underlyingToken, govContract, proposalId, 1);
     
         // Allocate the vote
         address rollup = address(0xdead);

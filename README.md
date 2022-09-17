@@ -1,22 +1,10 @@
 <img align="right" width="150" height="150" top="100" src="./assets/readme.jpg">
 
-# cleisthenes • [![ci](https://github.com/abigger87/cleisthenes/actions/workflows/ci.yml/badge.svg)](https://github.com/abigger87/cleisthenes/actions/workflows/ci.yml) ![license](https://img.shields.io/github/license/abigger87/cleisthenes?label=license) ![solidity](https://img.shields.io/badge/solidity-^0.8.15-lightgrey)
+# Athens • [![ci](https://github.com/abigger87/Athens/actions/workflows/ci.yml/badge.svg)](https://github.com/abigger87/Athens/actions/workflows/ci.yml) ![license](https://img.shields.io/github/license/abigger87/Athens?label=license) ![solidity](https://img.shields.io/badge/solidity-^0.8.15-lightgrey)
 
 A **Clean**, **Robust** Template for Foundry Projects.
 
 ## Getting Started
-
-Click [`use this template`](https://github.com/abigger87/cleisthenes/generate) to create a new repository with this repo as the initial state.
-
-Or, if your repo already exists, run:
-
-```sh
-forge init --template https://github.com/abigger87/cleisthenes
-git submodule update --init --recursive
-forge install
-```
-
-Run `./utils/rename.sh` to rename all instances of `cleisthenes` with the name of your project/repository.
 
 ## Blueprint
 
@@ -102,7 +90,7 @@ For a full list of configuration options, see the Foundry [configuration documen
 
 ## License
 
-[AGPL-3.0-only](https://github.com/abigger87/cleisthenes/blob/master/LICENSE)
+[AGPL-3.0-only](https://github.com/abigger87/Athens/blob/master/LICENSE)
 
 ## Acknowledgements
 

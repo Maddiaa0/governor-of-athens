@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.15;
 
-import {CleisthenesVoter} from "./CleisthenesVoter.sol";
-import {CleisthenesVoterTokenERC20} from "./CleisthenesVoterTokenERC20.sol";
+import {AthensVoter} from "./AthensVoter.sol";
+import {AthensVoterTokenERC20} from "./AthensVoterTokenERC20.sol";
 
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
-import {CleisthenesFactoryInterface} from "./interfaces/CleisthenesFactoryInterface.sol";
+import {AthensFactoryInterface} from "./interfaces/AthensFactoryInterface.sol";
 
 import "openzeppelin/contracts/proxy/Clones.sol";
 
@@ -18,18 +18,18 @@ import "forge-std/console.sol";
 //////////////////////////////////////////////////////////////*/
 error NotBridge();
 
-/// @title CleisthenesFactory
+/// @title AthensFactory
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
-contract CleisthenesFactory is CleisthenesFactoryInterface {
+contract AthensFactory is AthensFactoryInterface {
     address constant bridgeContractAddress = address(0xdead);
 
     // make immutable?
-    CleisthenesVoter public implementation;
-    CleisthenesVoterTokenERC20 public cloneErc20Implementation;
+    AthensVoter public implementation;
+    AthensVoterTokenERC20 public cloneErc20Implementation;
 
     uint64 public nextAvailableSlot;
-    mapping(uint64 => CleisthenesVoter) public voterProxies;
-    mapping(address => CleisthenesVoterTokenERC20) public syntheticVoterTokens;
+    mapping(uint64 => AthensVoter) public voterProxies;
+    mapping(address => AthensVoterTokenERC20) public syntheticVoterTokens;
 
     /*//////////////////////////////////////////////////////////////
                             MODIFIERS
@@ -46,11 +46,11 @@ contract CleisthenesFactory is CleisthenesFactoryInterface {
     //////////////////////////////////////////////////////////////*/
     constructor() {
       // Init with dummy values
-        implementation = new CleisthenesVoter();
+        implementation = new AthensVoter();
         implementation.initialize(address(this), address(0), address(0), 0, 0);
 
         // Init base erc20 token with dummy values
-        cloneErc20Implementation = new CleisthenesVoterTokenERC20();
+        cloneErc20Implementation = new AthensVoterTokenERC20();
         cloneErc20Implementation.initialize(address(this), "base", "BASE", 18);
     }
 
@@ -59,7 +59,7 @@ contract CleisthenesFactory is CleisthenesFactoryInterface {
     //////////////////////////////////////////////////////////////*/
     function createVoterProxy(address _tokenAddress, address _governorAddress, uint256 _proposalId, uint8 _vote)
         external
-        returns (CleisthenesVoter clone)
+        returns (AthensVoter clone)
     {
 
         // Check if the underlying token has an erc20 token, if no create it.
@@ -69,7 +69,7 @@ contract CleisthenesFactory is CleisthenesFactoryInterface {
 
         // init the clone
         bytes32 cloneHash = keccak256(abi.encodePacked(address(this), _governorAddress, _tokenAddress, _proposalId, _vote));
-        clone = CleisthenesVoter(Clones.cloneDeterministic(address(implementation), cloneHash));
+        clone = AthensVoter(Clones.cloneDeterministic(address(implementation), cloneHash));
         clone.initialize(address(this), _governorAddress, _tokenAddress, _proposalId, _vote);
 
         // cache next available slot in memory
@@ -93,14 +93,14 @@ contract CleisthenesFactory is CleisthenesFactoryInterface {
 
         // Transfer the number of input tokens to the voter proxy
         // Store voter clone in memory
-        CleisthenesVoter voterClone = voterProxies[_auxData];
+        AthensVoter voterClone = voterProxies[_auxData];
         address _underlyingToken = voterClone.tokenAddress();
 
         // Send the underlying token to the voter proxy
         ERC20(_underlyingToken).transferFrom(address(bridgeContractAddress), address(voterClone), _totalInputValue);
 
         // Send the correct number of voter tokens to the bridge
-        CleisthenesVoterTokenERC20 _syntheticToken = syntheticVoterTokens[_underlyingToken];
+        AthensVoterTokenERC20 _syntheticToken = syntheticVoterTokens[_underlyingToken];
         _syntheticToken.mint(msg.sender, _totalInputValue);
     }
 
@@ -130,7 +130,7 @@ contract CleisthenesFactory is CleisthenesFactoryInterface {
     // Deploy an erc20 factory to represent the tokens in the votes i.e. zkvComp, zkvUni
     function createSyntheticVoterToken(address _underlyingToken)
         internal
-        returns (CleisthenesVoterTokenERC20 voterToken)
+        returns (AthensVoterTokenERC20 voterToken)
     {
         // args
         bytes32 tokenHash = keccak256(abi.encode(_underlyingToken));
@@ -141,7 +141,7 @@ contract CleisthenesFactory is CleisthenesFactoryInterface {
         uint8 decimals = ERC20(_underlyingToken).decimals();
 
         // deploy and initialised the erc20 implementation
-        voterToken = CleisthenesVoterTokenERC20(Clones.cloneDeterministic(address(cloneErc20Implementation), tokenHash));
+        voterToken = AthensVoterTokenERC20(Clones.cloneDeterministic(address(cloneErc20Implementation), tokenHash));
         voterToken.initialize(address(this), _name, _symbol, decimals);
 
         console.log(voterToken.name());
