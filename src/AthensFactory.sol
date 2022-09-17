@@ -5,7 +5,7 @@ import {AthensVoter} from "./AthensVoter.sol";
 import {AthensVoterTokenERC20} from "./AthensVoterTokenERC20.sol";
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
 import {AthensFactoryInterface} from "./interfaces/AthensFactoryInterface.sol";
-import "openzeppelin/contracts/proxy/Clones.sol"
+import "openzeppelin/contracts/proxy/Clones.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
 /*//////////////////////////////////////////////////////////////
@@ -17,15 +17,25 @@ error InvalidAuxData();
 /// @title AthensFactory
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
 contract AthensFactory is AthensFactoryInterface {
+
+    /// TODO: update on bridge deployment
+    /// @notice Address of the Athens Bridge
     address constant bridgeContractAddress = address(0xdead);
 
-    // make immutable?
+    /// @notice Athens Voter Proxy Implementation 
     AthensVoter public implementation;
+
+    /// @notice Athens ZK Voter Token ERC20 Proxy Implementation
     AthensVoterTokenERC20 public cloneErc20Implementation;
 
+    /// @notice Next available aux index for a voter proxy
     uint64 public nextAvailableSlot;
+
+    /// @notice Mapping of aux index to voter proxy
     mapping(uint64 => AthensVoter) public voterProxies;
-    mapping(address => AthensVoterTokenERC20) public syntheticVoterTokens;
+
+    /// @notice Mapping of underlying token to zK Voter token
+    mapping(address => AthensVoterTokenERC20) public zkVoterTokens;
 
     /*//////////////////////////////////////////////////////////////
                             MODIFIERS
@@ -41,11 +51,11 @@ contract AthensFactory is AthensFactoryInterface {
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
     constructor() {
-      // Init with dummy values
+        // Init proxy implementation with dummy values
         implementation = new AthensVoter();
         implementation.initialize(address(this), address(0), address(0), 0, 0);
 
-        // Init base erc20 token with dummy values
+        // Init base erc20 token implementation with dummy values
         cloneErc20Implementation = new AthensVoterTokenERC20();
         cloneErc20Implementation.initialize(address(this), "base", "BASE", 18);
     }
@@ -53,14 +63,22 @@ contract AthensFactory is AthensFactoryInterface {
     /*//////////////////////////////////////////////////////////////
                             STATEFUL
     //////////////////////////////////////////////////////////////*/
+    
+    /// Create Voter Proxy
+    /// @notice Creates a new voter proxy, a voter proxy represents a position in a governance proposal. I.e. A for position in compound proposal 121
+    /// @dev If the _tokenAddress has not been seen before, then a new zk voter token is created to represent it
+    /// @param _tokenAddress Address of the underlying token
+    /// @param _governorAddress Address of the governor contract
+    /// @param _proposalId Id of the proposal
+    /// @param _vote Vote of the voter proxy // TODO: remove, automatically produce 3 positions (yay, nay, abstain)
     function createVoterProxy(address _tokenAddress, address _governorAddress, uint256 _proposalId, uint8 _vote)
         external
         returns (AthensVoter clone)
     {
 
         // Check if the underlying token has an erc20 token, if no create it.
-        if (address(syntheticVoterTokens[_tokenAddress]) == address(0x0)) {
-            syntheticVoterTokens[_tokenAddress] = createSyntheticVoterToken(_tokenAddress);
+        if (address(zkVoterTokens[_tokenAddress]) == address(0x0)) {
+            zkVoterTokens[_tokenAddress] = createSyntheticVoterToken(_tokenAddress);
         }
 
         // init the clone
@@ -79,14 +97,14 @@ contract AthensFactory is AthensFactoryInterface {
         nextAvailableSlot = ++_nextAvailableSlot;
     }
 
-    // Called by the bridge contract to get the proxy address of a vote - can only be called by the bridge
-    /**
-     * @param _auxData _aux bridge data, this tells us which voter proxy we are targeting
-     * @param _totalInputValue The total number of input tokens being vote with
-     */
+    /// Allocate Vote
+    /// @notice Batched called by the Athens Bridge to batch multiple votes into a single vote. 
+    ///         The bridge will receive zkVoter tokens representing the governance tokens which balance will be assigned
+    ///         to each user inside the rollup.
+    /// @dev Called by the bridge contract to get the proxy address of a vote - can only be called by the bridge
+    /// @param _auxData _aux bridge data, this tells us which voter proxy we are targeting
+    /// @param _totalInputValue The total number of input tokens being vote with
     function allocateVote(uint64 _auxData, uint256 _totalInputValue) external onlyBridge {
-        // TODO: receive the voting token and return an erc20 representing it to the shadow voter
-
         // Transfer the number of input tokens to the voter proxy
         // Store voter clone in memory
         AthensVoter voterClone = voterProxies[_auxData];
@@ -100,7 +118,7 @@ contract AthensFactory is AthensFactoryInterface {
         ERC20(_underlyingToken).transferFrom(address(bridgeContractAddress), address(voterClone), _totalInputValue);
 
         // Send the correct number of voter tokens to the bridge
-        AthensVoterTokenERC20 _syntheticToken = syntheticVoterTokens[_underlyingToken];
+        AthensVoterTokenERC20 _syntheticToken = zkVoterTokens[_underlyingToken];
         _syntheticToken.mint(msg.sender, _totalInputValue);
     }
 
@@ -116,10 +134,16 @@ contract AthensFactory is AthensFactoryInterface {
         // If the vote has finished then return the tokens back to the factory so they can be withdrawn
     }
 
-    // Call the comptroller contract and see if the vote has expired
-    function hasVoteExpired(address _tokenAddress, uint256 _proposalId) external returns (bool validState) {
+
+    /// Has Vote Expired
+    /// @notice Calls the comptroller current contract to check if the vote has expired.
+    /// @dev Called by a proxy, code is included in here to decrease the size of the proxy.
+    /// @param _governorAddress Address of the governor contract
+    /// @param _proposalId Id of the proposal
+    /// @return validState True if the vote has ended
+    function hasVoteExpired(address _governorAddress, uint256 _proposalId) external returns (bool validState) {
         GovernorBravoDelegateInterface.ProposalState returnedProposalState =
-            GovernorBravoDelegateInterface(_tokenAddress).state(_proposalId);
+            GovernorBravoDelegateInterface(_governorAddress).state(_proposalId);
         // TODO: more gas efficient way to do this?
         validState = (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Succeeded)
             || (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Expired)
@@ -128,7 +152,11 @@ contract AthensFactory is AthensFactoryInterface {
             || (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Defeated);
     }
 
-    // Deploy an erc20 factory to represent the tokens in the votes i.e. zkvComp, zkvUni
+    /// Create Synthetic Voter Token
+    /// @notice Deploy an erc20 factory to represent the tokens in the votes i.e. zkvComp, zkvUni
+    /// @dev Used by the aztec bridge to track users votes
+    /// @param _underlyingToken Address of the underlying token
+    /// @return voterToken Address of the newly deployed voter token
     function createSyntheticVoterToken(address _underlyingToken)
         internal
         returns (AthensVoterTokenERC20 voterToken)

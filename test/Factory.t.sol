@@ -147,7 +147,7 @@ contract AthensFactoryTest is Test {
         assertEq(IComp(compToken).balanceOf(address(proxy)), numTokens);
 
         // check i have a balance of synthetic tokens
-        address syntheticAddress = address(factory.syntheticVoterTokens(compToken));
+        address syntheticAddress = address(factory.zkVoterTokens(compToken));
         uint256 balance = IComp(syntheticAddress).balanceOf(rollup);
         assertEq(balance, numTokens);
     }

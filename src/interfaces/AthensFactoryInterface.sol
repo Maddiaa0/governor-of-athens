@@ -31,5 +31,5 @@ interface AthensFactoryInterface {
         returns (AthensVoter clone);
     function allocateVote(uint64 _auxData, uint256 _totalInputValue) external;
     function voterProxies(uint64) external returns (AthensVoter);
-    function syntheticVoterTokens(address) external returns (AthensVoterTokenERC20);
+    function zkVoterTokens(address) external returns (AthensVoterTokenERC20);
 }
