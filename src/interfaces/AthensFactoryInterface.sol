@@ -1,12 +1,11 @@
 pragma solidity 0.8.15;
 
-import { AthensVoter } from "../AthensVoter.sol";
+import {AthensVoter} from "../AthensVoter.sol";
 import {AthensVoterTokenERC20} from "../AthensVoterTokenERC20.sol";
 
 /// @title AthensFactory
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
 interface AthensFactoryInterface {
-    
     /*//////////////////////////////////////////////////////////////
                             EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -19,12 +18,11 @@ interface AthensFactoryInterface {
         uint8 vote
     );
     event CliesthenesVoterTokenERC20Created(address indexed underlyingToken, address indexed syntheticToken);
-    
-    
+
     /*//////////////////////////////////////////////////////////////
                             Functions
     //////////////////////////////////////////////////////////////*/
-    
+
     function hasVoteExpired(address tokenAddress, uint256 voteId) external returns (bool);
     function createVoterProxy(address _tokenAddress, address _governorAddress, uint256 _proposalId, uint8 _vote)
         external

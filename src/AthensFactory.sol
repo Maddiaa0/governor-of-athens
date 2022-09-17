@@ -17,12 +17,11 @@ error InvalidAuxData();
 /// @title AthensFactory
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
 contract AthensFactory is AthensFactoryInterface {
-
     /// TODO: update on bridge deployment
     /// @notice Address of the Athens Bridge
     address constant bridgeContractAddress = address(0xdead);
 
-    /// @notice Athens Voter Proxy Implementation 
+    /// @notice Athens Voter Proxy Implementation
     AthensVoter public implementation;
 
     /// @notice Athens ZK Voter Token ERC20 Proxy Implementation
@@ -63,7 +62,7 @@ contract AthensFactory is AthensFactoryInterface {
     /*//////////////////////////////////////////////////////////////
                             STATEFUL
     //////////////////////////////////////////////////////////////*/
-    
+
     /// Create Voter Proxy
     /// @notice Creates a new voter proxy, a voter proxy represents a position in a governance proposal. I.e. A for position in compound proposal 121
     /// @dev If the _tokenAddress has not been seen before, then a new zk voter token is created to represent it
@@ -75,14 +74,14 @@ contract AthensFactory is AthensFactoryInterface {
         external
         returns (AthensVoter clone)
     {
-
         // Check if the underlying token has an erc20 token, if no create it.
         if (address(zkVoterTokens[_tokenAddress]) == address(0x0)) {
             zkVoterTokens[_tokenAddress] = createSyntheticVoterToken(_tokenAddress);
         }
 
         // init the clone
-        bytes32 cloneHash = keccak256(abi.encodePacked(address(this), _governorAddress, _tokenAddress, _proposalId, _vote));
+        bytes32 cloneHash =
+            keccak256(abi.encodePacked(address(this), _governorAddress, _tokenAddress, _proposalId, _vote));
         clone = AthensVoter(Clones.cloneDeterministic(address(implementation), cloneHash));
         clone.initialize(address(this), _governorAddress, _tokenAddress, _proposalId, _vote);
 
@@ -98,7 +97,7 @@ contract AthensFactory is AthensFactoryInterface {
     }
 
     /// Allocate Vote
-    /// @notice Batched called by the Athens Bridge to batch multiple votes into a single vote. 
+    /// @notice Batched called by the Athens Bridge to batch multiple votes into a single vote.
     ///         The bridge will receive zkVoter tokens representing the governance tokens which balance will be assigned
     ///         to each user inside the rollup.
     /// @dev Called by the bridge contract to get the proxy address of a vote - can only be called by the bridge
@@ -110,7 +109,9 @@ contract AthensFactory is AthensFactoryInterface {
         AthensVoter voterClone = voterProxies[_auxData];
 
         // Revert if no proxy is deployed for the given aux data
-        if (address(voterClone) == address(0x0)) revert InvalidAuxData();
+        if (address(voterClone) == address(0x0)) {
+            revert InvalidAuxData();
+        }
 
         address _underlyingToken = voterClone.tokenAddress();
 
@@ -123,17 +124,17 @@ contract AthensFactory is AthensFactoryInterface {
     }
 
     // TODO
-    // function redeemVotingTokens(uint256 _totalInputValue) onlyBridge {
-    //   // Return the number of voter tokens back to the bridge
+    function redeemVotingTokens(uint256 _auxData, uint256 _totalInputValue) onlyBridge {
+      // Return the number of voter tokens back to the bridge
+      
 
-    //   // Check that the factory has enough tokens to return to the bridge
-
-    // }
+      // Check that the factory has enough tokens to return to the bridge
+    
+    }
 
     function returnUnderlyingToFactory(uint64 _proxyId) external {
         // If the vote has finished then return the tokens back to the factory so they can be withdrawn
     }
-
 
     /// Has Vote Expired
     /// @notice Calls the comptroller current contract to check if the vote has expired.
@@ -157,10 +158,7 @@ contract AthensFactory is AthensFactoryInterface {
     /// @dev Used by the aztec bridge to track users votes
     /// @param _underlyingToken Address of the underlying token
     /// @return voterToken Address of the newly deployed voter token
-    function createSyntheticVoterToken(address _underlyingToken)
-        internal
-        returns (AthensVoterTokenERC20 voterToken)
-    {
+    function createSyntheticVoterToken(address _underlyingToken) internal returns (AthensVoterTokenERC20 voterToken) {
         // args
         bytes32 tokenHash = keccak256(abi.encode(_underlyingToken));
 

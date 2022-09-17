@@ -33,8 +33,6 @@ interface GovernorBravoDelegateInterface {
     )
         external
         returns (uint256);
-
-    
 }
 
 contract GovernorBravoEvents {

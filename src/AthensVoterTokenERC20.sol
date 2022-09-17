@@ -4,14 +4,11 @@ import "openzeppelin/contracts/utils/Context.sol";
 import "openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-
 error AlreadyInitialised();
-
 
 /// @title AthensVoterTokenERC20
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
 contract AthensVoterTokenERC20 is ERC20, Initializable {
-    
     /// @notice ERC20 Metadata
     uint8 _decimals;
     string private _name;
@@ -19,7 +16,6 @@ contract AthensVoterTokenERC20 is ERC20, Initializable {
 
     /// @notice The token Owner (AthensFactory)
     address public owner;
-
 
     /*//////////////////////////////////////////////////////////////
                             Modifiers
@@ -30,13 +26,12 @@ contract AthensVoterTokenERC20 is ERC20, Initializable {
         _;
     }
 
-
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Uses Dummy data as implementation will be cloned
-    constructor() ERC20("ZKV", "ZKV"){}
+    constructor() ERC20("ZKV", "ZKV") {}
 
     /*//////////////////////////////////////////////////////////////
                             Initializer
