@@ -16,12 +16,18 @@ Generated from [femplate](https://github.com/abigger87/femplate)
 lib
 ├─ forge-std — https://github.com/foundry-rs/forge-std
 ├─ solmate — https://github.com/Rari-Capital/solmate
+├─ openzeppelin - https://github.com/OpenZeppelin/openzeppelin-contracts
 scripts
-├─ Deploy.s.sol — Simple Deployment Script
+├─ Deploy.s — Simple Deployment Script
+├─ CreateProxy.s - Example to Create a Proxy
 src
-├─ Greeter — A Minimal Greeter Contract
-test
-└─ Greeter.t — Exhaustive Tests
+├─ AthensFactory — A Factory Contract to Manage and Deploy Voter Proxies and ZKVoter Tokens
+├─ AthensVoter - A Minimal Clone Contract to Hold and Cast Anonymous Votes
+├─ AthensVoterTokenERC20 - A Minimal Clone ERC20 Token representing a ZKVoter Token
+├─ interfaces
+|   ├─ AthensFactoryInterface
+|   ├─ AthensVoterInterface
+|   └─ GovernorBravoDelegateInterface
 ```
 
 ## Development
