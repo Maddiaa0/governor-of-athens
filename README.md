@@ -1,6 +1,6 @@
 <img align="right" width="150" height="150" top="100" src="./assets/readme.jpg">
 
-# Athens • [![ci](https://github.com/abigger87/Athens/actions/workflows/ci.yml/badge.svg)](https://github.com/abigger87/Athens/actions/workflows/ci.yml) ![license](https://img.shields.io/github/license/abigger87/Athens?label=license) ![solidity](https://img.shields.io/badge/solidity-^0.8.15-lightgrey)
+# Athens • [![ci](https://github.com/cheethas/governor-of-athens/actions/workflows/ci.yml/badge.svg)](https://github.com/cheethas/governor-of-athens/actions/workflows/ci.yml) ![license](https://img.shields.io/github/license/abigger87/Athens?label=license) ![solidity](https://img.shields.io/badge/solidity-^0.8.15-lightgrey)
 
 ## What is Athens
 
