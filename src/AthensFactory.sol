@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity 0.8.15;
+pragma solidity 0.8.10;
 
 import {AthensVoter} from "./AthensVoter.sol";
 import {AthensVoterTokenERC20} from "./AthensVoterTokenERC20.sol";
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
 import {AthensFactoryInterface} from "./interfaces/AthensFactoryInterface.sol";
 import "openzeppelin/contracts/proxy/Clones.sol";
+import {Owned} from "solmate/auth/Owned.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
 /*//////////////////////////////////////////////////////////////
@@ -16,10 +17,10 @@ error InvalidAuxData();
 
 /// @title AthensFactory
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
-contract AthensFactory is AthensFactoryInterface {
+contract AthensFactory is AthensFactoryInterface, Owned {
     /// TODO: update on bridge deployment
     /// @notice Address of the Athens Bridge
-    address constant bridgeContractAddress = address(0xdead);
+    address bridgeContractAddress;
 
     /// @notice Athens Voter Proxy Implementation
     AthensVoter public implementation;
@@ -49,7 +50,7 @@ contract AthensFactory is AthensFactoryInterface {
     /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor() {
+    constructor() Owned(msg.sender) {
         // Init proxy implementation with dummy values
         implementation = new AthensVoter();
         implementation.initialize(address(this), address(0), address(0), 0, 0);
@@ -94,6 +95,14 @@ contract AthensFactory is AthensFactoryInterface {
 
         // Increment the next available slot
         nextAvailableSlot = ++_nextAvailableSlot;
+    }
+
+    /// Set Bridge
+    /// @notice Set the aztec bridge contract for only bridge methods
+    /// @dev Can only be called by the contract owner
+    /// @param _bridgeContractAddress Address of the bridge contract
+    function setBridge(address _bridgeContractAddress) external onlyOwner {
+        bridgeContractAddress = _bridgeContractAddress;
     }
 
     /// Allocate Vote
@@ -154,7 +163,7 @@ contract AthensFactory is AthensFactoryInterface {
     function hasVoteExpired(address _governorAddress, uint256 _proposalId) external returns (bool validState) {
         GovernorBravoDelegateInterface.ProposalState returnedProposalState =
             GovernorBravoDelegateInterface(_governorAddress).state(_proposalId);
-        
+
         // TODO: more gas efficient way to do this - check inverse?
         validState = (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Succeeded)
             || (returnedProposalState == GovernorBravoDelegateInterface.ProposalState.Expired)

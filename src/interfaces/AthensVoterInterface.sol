@@ -35,5 +35,4 @@ interface AthensVoterInterface {
     function executeVote() external;
     function delegate() external;
     function returnTokenToFactory() external;
-
 }
