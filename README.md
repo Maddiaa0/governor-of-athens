@@ -8,7 +8,7 @@ When paired with the Athens Aztec Bridge, it will enable any users of existing p
 
 This project was created by sleep deprivation as part of the EthBerlin 2022 Hackathon and is not in anyway shape or form ready for production use.
 
-Hackathon Bridge Implementation can be [found here](https://github.com/cheethas/aztec-connect-bridges/blob/cheethas/compoundGov/src/bridges/GovernorBravo/GovernorBravoBridgeContract.sol)
+Hackathon Bridge Implementation can be [found here](https://github.com/cheethas/aztec-connect-bridges/blob/cheethas/compoundGov/src/bridges/athens_governor_bravo/AthensGovernorBravoBridgeContract.sol)
 
 Generated from [femplate](https://github.com/abigger87/femplate)
 
