@@ -41,6 +41,8 @@ jobs:
 
       - name: Check gas snapshots
         run: forge snapshot --check
+        env:
+          RPC_URL: ${{ secrets.RPC_URL }}
 
   slither:
     runs-on: ubuntu-latest

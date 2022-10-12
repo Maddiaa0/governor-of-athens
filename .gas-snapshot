@@ -1,1 +1,3 @@
-GreeterTest:testSetGm() (gas: 107402)
+AthensFactoryTest:testAllocateVote() (gas: 494343)
+AthensFactoryTest:testCanRedeemRollupTokens() (gas: 533070)
+AthensFactoryTest:testCreateVoterProxy() (gas: 2750854)

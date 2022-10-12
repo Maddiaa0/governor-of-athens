@@ -77,7 +77,7 @@ contract AthensVoter is AthensVoterInterface, Clone {
 
     /// @notice Vote to be cast
     /// @dev Value is 1 byte
-    function vote() public returns (uint8) {
+    function vote() public pure returns (uint8) {
         return _getArgUint8(VOTE);
     }
 

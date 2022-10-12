@@ -75,9 +75,9 @@ contract AthensFactoryTest is Test {
         // Create a proposal as beef
         vm.prank(user);
 
-        uint256 balance = IComp(compToken).balanceOf(user);
-        uint96 prior = IComp(compToken).getPriorVotes(user, block.number - 1);
-        uint96 current = IComp(compToken).getCurrentVotes(user);
+        IComp(compToken).balanceOf(user);
+        IComp(compToken).getPriorVotes(user, block.number - 1);
+        IComp(compToken).getCurrentVotes(user);
 
         vm.prank(user);
         bytes memory cd =
