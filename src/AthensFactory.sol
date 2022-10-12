@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity 0.8.10;
+pragma solidity 0.8.15;
 
 import {AthensVoter} from "./AthensVoter.sol";
 import {AthensVoterTokenERC20} from "./AthensVoterTokenERC20.sol";
@@ -8,6 +8,8 @@ import {AthensFactoryInterface} from "./interfaces/AthensFactoryInterface.sol";
 import "openzeppelin/contracts/proxy/Clones.sol";
 import {Owned} from "solmate/auth/Owned.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
+
+import {ClonesWithImmutableArgs} from "clones-with-immutable-args/ClonesWithImmutableArgs.sol";
 
 /*//////////////////////////////////////////////////////////////
                         ERRORS
@@ -18,6 +20,8 @@ error InvalidAuxData();
 /// @title AthensFactory
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
 contract AthensFactory is AthensFactoryInterface, Owned {
+    using ClonesWithImmutableArgs for address;
+
     /// TODO: update on bridge deployment
     /// @notice Address of the Athens Bridge
     address bridgeContractAddress;
@@ -51,9 +55,8 @@ contract AthensFactory is AthensFactoryInterface, Owned {
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
     constructor() Owned(msg.sender) {
-        // Init proxy implementation with dummy values
+        // Init proxy implementation, no need to initialize as it uses immutable args
         implementation = new AthensVoter();
-        implementation.initialize(address(this), address(0), address(0), 0, 0);
 
         // Init base erc20 token implementation with dummy values
         cloneErc20Implementation = new AthensVoterTokenERC20();
@@ -80,11 +83,9 @@ contract AthensFactory is AthensFactoryInterface, Owned {
             zkVoterTokens[_tokenAddress] = createSyntheticVoterToken(_tokenAddress);
         }
 
-        // init the clone
-        bytes32 cloneHash =
-            keccak256(abi.encodePacked(address(this), _governorAddress, _tokenAddress, _proposalId, _vote));
-        clone = AthensVoter(Clones.cloneDeterministic(address(implementation), cloneHash));
-        clone.initialize(address(this), _governorAddress, _tokenAddress, _proposalId, _vote);
+        // Pack clone arguements and deploy
+        bytes memory data = abi.encodePacked(address(this), _governorAddress, _tokenAddress, _proposalId, _vote);
+        clone = AthensVoter(address(implementation).clone(data));
 
         // cache next available slot in memory
         uint64 _nextAvailableSlot = nextAvailableSlot;

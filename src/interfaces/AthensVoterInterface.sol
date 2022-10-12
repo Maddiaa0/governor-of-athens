@@ -24,15 +24,16 @@ interface AthensVoterInterface {
     /*//////////////////////////////////////////////////////////////
                             FUNCTIONS
     //////////////////////////////////////////////////////////////*/
-    function initialize(
-        address _factoryAddress,
-        address _govAddress,
-        address _tokenAddress,
-        uint256 _proposalId,
-        uint8 _vote
-    )
-        external;
     function executeVote() external;
     function delegate() external;
     function returnTokenToFactory() external;
+
+    /*//////////////////////////////////////////////////////////////
+                Clones with Immutable Args Getters
+    //////////////////////////////////////////////////////////////*/
+    function factoryAddress() external returns (address);
+    function govAddress() external returns (address);
+    function tokenAddress() external returns (address);
+    function proposalId() external returns (uint256);
+    function vote() external returns (uint8);
 }

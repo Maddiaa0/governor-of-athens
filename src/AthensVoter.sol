@@ -5,6 +5,8 @@ import {AthensFactoryInterface} from "./interfaces/AthensFactoryInterface.sol";
 import {AthensVoterInterface} from "./interfaces/AthensVoterInterface.sol";
 import "openzeppelin/contracts/proxy/utils/Initializable.sol";
 
+import {Clone} from "clones-with-immutable-args/Clone.sol";
+
 import {ERC20} from "solmate/tokens/ERC20.sol";
 
 interface IComp {
@@ -24,22 +26,60 @@ error FailedToReturnTokensToFactory();
 
 /// @title AthensVoter
 /// @author Maddiaa <Twitter: @Maddiaa0, Github: /cheethas>
-contract AthensVoter is AthensVoterInterface, Initializable {
+contract AthensVoter is AthensVoterInterface, Clone {
+    /*//////////////////////////////////////////////////////////////
+                Clones with Immutable Args Offsets
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev First address (20 bytes)
+    uint256 internal constant FACTORY_OFFSET = 0;
+
+    /// @dev Second address (20 bytes) (20)
+    uint256 internal constant GOV_OFFSET = 20;
+
+    /// @dev Third address (20 bytes) (20 + 20)
+    uint256 internal constant TOKEN_ADDRESS = 40;
+
+    /// @dev Fourth uint256 (32 bytes) (20 + 20 + 20)
+    uint256 internal constant PROPOSAL_ID = 60;
+
+    /// @dev Firth uint8 (1 byte) (20 + 20 + 20 + 32)
+    uint256 internal constant VOTE = 92;
+
+    /*//////////////////////////////////////////////////////////////
+                Clones with Immutable Args Functions
+    //////////////////////////////////////////////////////////////*/
+
     /// @notice The address of the Athens Factory Contract
     /// Sensitive operations can only be called by it
-    address factoryAddress;
+    /// @dev Value is 20 bytes
+    function factoryAddress() public pure returns (address) {
+        return _getArgAddress(FACTORY_OFFSET);
+    }
 
     /// @notice Address of Governor Bravo for the given protocol
-    address public govAddress;
+    /// @dev Value is 20 bytes
+    function govAddress() public pure returns (address) {
+        return _getArgAddress(GOV_OFFSET);
+    }
 
     /// @notice Governance token
-    address public tokenAddress;
-
-    /// @notice Vote to be cast
-    uint8 public vote;
+    /// @dev Value is 20 bytes
+    function tokenAddress() public pure returns (address) {
+        return _getArgAddress(TOKEN_ADDRESS);
+    }
 
     /// @notice The proposal Id to be voted on
-    uint256 public proposalId;
+    /// @dev Value is 32 bytes
+    function proposalId() public pure returns (uint256) {
+        return _getArgUint256(PROPOSAL_ID);
+    }
+
+    /// @notice Vote to be cast
+    /// @dev Value is 1 byte
+    function vote() public returns (uint8) {
+        return _getArgUint8(VOTE);
+    }
 
     /*//////////////////////////////////////////////////////////////
                             Modifiers
@@ -49,34 +89,14 @@ contract AthensVoter is AthensVoterInterface, Initializable {
     /// @notice Sensitive operations can only be called by the Athens Factory which in turn can only be
     ///         called by the bridge
     modifier onlyFactory() {
-        if (msg.sender != factoryAddress) {
+        if (msg.sender != factoryAddress()) {
             revert OnlyFactory();
         }
         _;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                            Initializer
-    //////////////////////////////////////////////////////////////*/
-    /// Initialize
-    /// @notice Initialize the Athens Voter
-    /// @dev Should only be able to be called once
-    function initialize(
-        address _factoryAddress,
-        address _govAddress,
-        address _tokenAddress,
-        uint256 _proposalId,
-        uint8 _vote
-    )
-        external
-        initializer
-    {
-        factoryAddress = _factoryAddress;
-        govAddress = _govAddress;
-        tokenAddress = _tokenAddress;
-        proposalId = _proposalId;
-        vote = _vote;
-    }
+    /// @notice No constructor required
+    constructor() {}
 
     /*//////////////////////////////////////////////////////////////
                         External Functions
@@ -86,7 +106,7 @@ contract AthensVoter is AthensVoterInterface, Initializable {
     /// @notice Cast vote to Governor Bravo
     /// @dev TODO: Should only be able to be called within X blocks of the vote
     function executeVote() external {
-        GovernorBravoDelegateInterface(govAddress).castVote(proposalId, vote);
+        GovernorBravoDelegateInterface(govAddress()).castVote(proposalId(), vote());
     }
 
     /// Delegate
@@ -95,14 +115,14 @@ contract AthensVoter is AthensVoterInterface, Initializable {
     ///      be called by a keeper before each vote.
     /// @dev There are risks that block builders will try to exclude this funciton from their blocks
     function delegate() external {
-        IComp(tokenAddress).delegate(address(this));
+        IComp(tokenAddress()).delegate(address(this));
     }
 
     /// Has Vote Expired
     /// @notice Call the factory to check if the vote has expired, if so then use to allow withdrwawl
     /// @dev Users will not be able to withdraw from the proxy if the vote has not complete.
     function hasVoteExpired() internal {
-        bool voteExpired = AthensFactoryInterface(factoryAddress).hasVoteExpired(govAddress, proposalId);
+        bool voteExpired = AthensFactoryInterface(factoryAddress()).hasVoteExpired(govAddress(), proposalId());
         if (!voteExpired) {
             revert VoteStillActive();
         }
@@ -116,8 +136,9 @@ contract AthensVoter is AthensVoterInterface, Initializable {
         hasVoteExpired();
 
         // Return the balance of the factory back to the rollup
-        uint256 balance = ERC20(tokenAddress).balanceOf(address(this));
-        bool success = ERC20(tokenAddress).transfer(factoryAddress, balance);
+        address _tokenAddress = tokenAddress();
+        uint256 balance = ERC20(_tokenAddress).balanceOf(address(this));
+        bool success = ERC20(_tokenAddress).transfer(factoryAddress(), balance);
         if (!success) {
             revert FailedToReturnTokensToFactory();
         }
