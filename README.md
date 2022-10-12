@@ -19,6 +19,7 @@ lib
 ├─ forge-std — https://github.com/foundry-rs/forge-std
 ├─ solmate — https://github.com/Rari-Capital/solmate
 ├─ openzeppelin - https://github.com/OpenZeppelin/openzeppelin-contracts
+├─ clones-with-immutable-args - https://github.com/wighawag/clones-with-immutable-args
 scripts
 ├─ Deploy.s — Simple Deployment Script
 ├─ CreateProxy.s - Example to Create a Proxy
