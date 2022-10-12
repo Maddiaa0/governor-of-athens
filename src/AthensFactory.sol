@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity 0.8.15;
+pragma solidity 0.8.10;
 
 import {AthensVoter} from "./AthensVoter.sol";
 import {AthensVoterTokenERC20} from "./AthensVoterTokenERC20.sol";
@@ -22,7 +22,6 @@ error InvalidAuxData();
 contract AthensFactory is AthensFactoryInterface, Owned {
     using ClonesWithImmutableArgs for address;
 
-    /// TODO: update on bridge deployment
     /// @notice Address of the Athens Bridge
     address bridgeContractAddress;
 
