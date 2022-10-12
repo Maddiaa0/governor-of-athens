@@ -21,6 +21,7 @@ jobs:
         run: forge test
         env:
           FOUNDRY_PROFILE: ci
+          RPC_URL: ${{ secrets.RPC_URL }}
 
   snapshot:
     runs-on: ubuntu-latest
@@ -43,9 +44,6 @@ jobs:
 
   slither:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [16.x]
     steps:
       - uses: actions/checkout@v2
 
@@ -56,9 +54,6 @@ jobs:
 
       - name: Install deps
         run: forge install
-
-      - name: Check contract sizes
-        run: forge build --sizes
 
       - name: Run Slither
         uses: crytic/slither-action@main
