@@ -1,4 +1,4 @@
-pragma solidity 0.8.10;
+pragma solidity >=0.8.10;
 
 import {GovernorBravoDelegateInterface} from "./interfaces/GovernorBravoDelegateInterface.sol";
 import {AthensFactoryInterface} from "./interfaces/AthensFactoryInterface.sol";

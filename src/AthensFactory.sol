@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity 0.8.10;
+pragma solidity >=0.8.10;
 
 import {AthensVoter} from "./AthensVoter.sol";
 import {AthensVoterTokenERC20} from "./AthensVoterTokenERC20.sol";
